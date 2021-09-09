@@ -15,17 +15,23 @@ const login = async (req, res) => {
     });
 
     if (!user) {
-      return res
-        .status(422)
-        .json({ message: "These credentials doesn't match our records!" });
+      return res.status(422).json({
+        message: "Ivalid inputs",
+        errors: {
+          username: "These credentials doesn't match our records!",
+        },
+      });
     }
 
     const credentials = await bcrypt.compare(password, user.password);
 
     if (!credentials) {
-      return res
-        .status(422)
-        .json({ message: "These credentials doesn't match our records!" });
+      return res.status(422).json({
+        message: "Ivalid inputs",
+        errors: {
+          username: "These credentials doesn't match our records!",
+        },
+      });
     }
 
     const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
@@ -75,8 +81,10 @@ const forgot = async (req, res) => {
 
     if (!user) {
       return res.status(422).json({
-        message: "No user with the given email/username!",
-        key: "email",
+        message: "Ivalid inputs",
+        errors: {
+          email: "No user with the given email/username!",
+        },
       });
     }
 
@@ -111,7 +119,10 @@ const reset = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(422).json({ message: "User not fount!" });
+      return res.status(422).json({
+        message: "Ivalid inputs",
+        errors: { email: "User not found!" },
+      });
     }
 
     //Verify token if it is valid
@@ -122,9 +133,7 @@ const reset = async (req, res) => {
       token !== user.resetPassword.token ||
       Date.now() > user.resetPassword.expires_at
     ) {
-      return res.status(422).json({
-        message: "Invalid token! Please try again.",
-      });
+      return res.status(403).json({ message: "Invalid token! Please try again." });
     }
 
     //enctypt new password
