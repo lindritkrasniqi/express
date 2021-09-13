@@ -4,7 +4,13 @@ const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.APP_CLIENT_URL,
+    credentials: true,
+    allowedHeaders: ["Authorization"],
+  })
+);
 app.use(bodyParser.json({ type: "application/json" }));
 
 app.use("/api", require("./routes/api"));
