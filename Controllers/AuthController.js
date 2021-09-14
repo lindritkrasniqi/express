@@ -8,17 +8,17 @@ const { sendMail } = require("../plugins/nodeMailer");
 
 const login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     const user = await User.findOne({
-      $or: [{ username }, { email: username }],
-    });
+      $or: [{ email }, { username: email }],
+    }).select("password");
 
     if (!user) {
       return res.status(422).json({
         message: "Ivalid inputs",
         errors: {
-          username: "These credentials doesn't match our records!",
+          email: "These credentials doesn't match our records!",
         },
       });
     }
@@ -29,14 +29,14 @@ const login = async (req, res) => {
       return res.status(422).json({
         message: "Ivalid inputs",
         errors: {
-          username: "These credentials doesn't match our records!",
+          email: "These credentials doesn't match our records!",
         },
       });
     }
 
     const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
 
-    res.cookie("jwt", token, { maxAge: 2 }).json({ token });
+    res.cookie("jwt", token, { maxAge: 22222 }).json({ token });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -61,10 +61,12 @@ const register = async (req, res) => {
     res.status(201).json({ message: "Successfully registred!" });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400).json({
-        message: error.keyPattern.username
-          ? "Username has already been taken!"
-          : "Email has already been taken!",
+      return res.status(422).json({
+        message: "Invalid inputs",
+        errors: {
+          username: error.keyPattern.username ? "Username has already been taken!": undefined,
+          email: error.keyPattern.email ? "Email has already been taken!": undefined,
+        },
       });
     }
 
@@ -101,7 +103,7 @@ const forgot = async (req, res) => {
 
     await sendMail(email, {
       subject: "Reset password link", // Subject line
-      html: `<a href='http://localhost:8000/accounts/reset?email=${email}&token=${user.resetPassword.token}'>Reset password link</a>`, // html body
+      html: `<a href='${process.env.APP_CLIENT_URL}/accounts/reset?email=${email}&token=${user.resetPassword.token}'>Reset password link</a>`, // html body
     });
 
     res.json({ message: "Reset password link has been sent!" });
@@ -133,7 +135,9 @@ const reset = async (req, res) => {
       token !== user.resetPassword.token ||
       Date.now() > user.resetPassword.expires_at
     ) {
-      return res.status(403).json({ message: "Invalid token! Please try again." });
+      return res
+        .status(403)
+        .json({ message: "Invalid token! Please try again." });
     }
 
     //enctypt new password
