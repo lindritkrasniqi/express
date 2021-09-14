@@ -1,10 +1,10 @@
 module.exports = (req, res, next) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   const errors = {};
 
-  if (!username || typeof username !== "string") {
-    errors.username = "The username field is required.";
+  if (!email || typeof email !== "string") {
+    errors.email = "The email field is required.";
   }
 
   if (!password || typeof password !== "string") {
