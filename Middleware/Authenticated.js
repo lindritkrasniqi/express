@@ -2,8 +2,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../Models/User");
 
 const requireAuth = (req, res, next) => {
-  const token =
-    req.body.token || req.query.token || req.headers["Authorization"];
+  const token = req.body.token || req.query.token || req.cookies.jwt;
 
   if (!token) {
     return res.status(401).json({ message: "Unauthenticated." });
@@ -13,8 +12,7 @@ const requireAuth = (req, res, next) => {
 };
 
 const verifyToken = async (req, res, next) => {
-  const token =
-    req.body.token || req.query.token || req.headers["Authorization"];
+  const token = req.body.token || req.query.token || req.cookies.jwt;
 
   try {
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
